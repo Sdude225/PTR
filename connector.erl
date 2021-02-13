@@ -4,7 +4,7 @@
 
 init() ->
     inets:start(),
-    register(router, spawn(router, router_main_loop, [])),
+    router:start_link(),
     register(conn1, spawn(?MODULE, request, ["http://localhost:4001/tweets/1"])),
     register(conn2, spawn(?MODULE, request, ["http://localhost:4001/tweets/2"])).
 
@@ -15,6 +15,6 @@ request(Request) ->
 conn_inf_loop() ->
     receive
         Tweet ->
-            router ! {tweet, Tweet},
+            gen_server:cast(router, {tweet, Tweet}),
             conn_inf_loop()
     end.
