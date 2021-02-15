@@ -4,14 +4,23 @@
 
 
 start_link() ->
-    gen_server:start_link({local, router}, ?MODULE, [], []),
-    auto_scaler:start_link().
+    gen_server:start_link({local, router}, ?MODULE, [], []).
 
 init(Args) ->
     {ok, Args}.
 
 handle_cast({tweet, Tweet}, State) ->
-    {noreply, State}.
+    A = is_atom(string:find(Tweet, "}\n\n", trailing)),
+    if 
+        A == true ->
+            NewState = lists:append(State, [Tweet]),
+            {noreply, NewState};
+
+        A == false ->
+            NewState = lists:append(State, [Tweet]),
+            io:format("~s~n////////////////////", [NewState]),
+            {noreply, []}
+    end.
 
 handle_info(Info, State) ->
     {noreply, State}.

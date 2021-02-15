@@ -11,10 +11,11 @@ init(Args) ->
     {ok, Args}.
 
 handle_cast({msg_counter_init, Previous_Len}, State) ->
+    io:format("~p~n", [State]),
     timer:sleep(1000),
     Stats = sys:statistics(router, get),
     {ok, Stats_To_List} = Stats,
-
+    io:format("~p~n", [Stats]),
     {_, Current_Len} = lists:keyfind(messages_in, 1, Stats_To_List),
     Len = Current_Len - Previous_Len,
     gen_server:cast(auto_scaler, {msg_counter_init, Current_Len}),
