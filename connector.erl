@@ -4,7 +4,7 @@
 
 init() ->
     inets:start(),
-    router:start_link(),
+    message_concat:start_link(),
     register(conn1, spawn(?MODULE, request, ["http://localhost:4001/tweets/1"])),
     register(conn2, spawn(?MODULE, request, ["http://localhost:4001/tweets/2"])).
 
@@ -14,9 +14,9 @@ request(Request) ->
 
 conn_inf_loop(Request) ->
     receive
-        {eror, socked_closed_remotely} ->
+        {http, {_, {error, socket_closed_remotely}}} ->
             request(Request);
         {http, {_, stream, Tweet}} ->
-            gen_server:cast(router, {tweet, Tweet}),
+            gen_server:cast(message_concat, {tweet, Tweet}),
             conn_inf_loop(Request)
     end.
