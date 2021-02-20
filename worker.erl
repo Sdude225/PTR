@@ -11,7 +11,8 @@ init(Args) ->
 
 handle_cast({tweet, Tweet}, State) ->
     % timer:sleep(rand:uniform(451) + 49),
-    io:format("////////////////////////////////////~s~n", [Tweet]),
+    PropList = jsone:decode(<<Tweet>>, [{object_format, proplist}]),
+    io:format("~s~n", [Tweet]),
     {noreply, State}.
 
 handle_call(_, _, _) ->
