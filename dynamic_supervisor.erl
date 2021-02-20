@@ -18,7 +18,7 @@ init(_Args) ->
             id => worker,
             start => {worker, start_link, []},
             restart => permanent,
-            shutdown => 2000,
+            shutdown => infinity,
             type => worker,
             modules => [worker]
         }

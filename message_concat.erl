@@ -11,15 +11,16 @@ init(Args) ->
     {ok, Args}.
 
 handle_cast({tweet, Tweet}, State) ->
-    A = is_atom(string:find(Tweet, "}\n\n", trailing)),
+    A = is_atom(string:find(Tweet, "}\n", trailing)),
     if 
-        A == true ->
+        A ->
             NewState = lists:append(State, [Tweet]),
             {noreply, NewState};
 
-        A == false ->
+        true ->
             NewState = lists:append(State, [Tweet]),
-            gen_server:cast(router, {tweet, NewState}),
+            Split_Msg = string:split(NewState, "event: \"message\"\n\ndata:", all),
+            gen_server:cast(router, {tweet, Split_Msg}),
             {noreply, []}
     end.
 

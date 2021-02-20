@@ -12,7 +12,8 @@ init(Args) ->
     {ok, 1}.
 
 handle_cast({tweet, Tweet}, State) ->
-    {noreply, State}.
+    NewState = round_robin_distrib(Tweet, State),
+    {noreply, NewState}.
 
 
 round_robin_distrib(Tweet, Index) ->

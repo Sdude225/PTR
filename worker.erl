@@ -7,11 +7,12 @@ start_link() ->
 
 init(Args) ->
     global:register_name(self(), self()),
-    io:format("Worker ~p started~n", [self()]),
     {ok, Args}.
 
 handle_cast({tweet, Tweet}, State) ->
-    {ok, State}.
+    % timer:sleep(rand:uniform(451) + 49),
+    io:format("////////////////////////////////////~s~n", [Tweet]),
+    {noreply, State}.
 
 handle_call(_, _, _) ->
     ok.

@@ -17,7 +17,6 @@ handle_cast({msg_counter_init, Previous_Len}, State) ->
     {_, Current_Len} = lists:keyfind(messages_in, 1, Stats_To_List),
     Len = Current_Len - Previous_Len,
     change_workers_number(Len),
-    io:format("Workers : ~p~n Messages : ~p~n", [global:registered_names(), Len]),
     gen_server:cast(auto_scaler, {msg_counter_init, Current_Len}),
     {noreply, Len}.
 
