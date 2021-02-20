@@ -11,9 +11,19 @@ init(Args) ->
 
 handle_cast({tweet, Tweet}, State) ->
     % timer:sleep(rand:uniform(451) + 49),
-    PropList = jsone:decode(<<Tweet>>, [{object_format, proplist}]),
-    io:format("~s~n", [Tweet]),
+    PropList = jsone:decode(list_to_binary([Tweet]), [{object_format, proplist}]),
+    [{<<"message">>, [{<<"tweet">>, Tweet_Info_Field}, _]}] = PropList,
+
+    Language = proplists:get_value(<<"lang">>, Tweet_Info_Field),
+    Text = proplists:get_value(<<"text">>, Tweet_Info_Field),
+    check_language(binary_to_list(Language)),
     {noreply, State}.
+
+check_language("en") ->
+    io:format("~nvalid language", []);
+
+check_language(_) ->
+    io:format("~nundefined or invalid language", []).
 
 handle_call(_, _, _) ->
     ok.
