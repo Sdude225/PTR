@@ -1,6 +1,6 @@
 -module(worker).
 -behaviour(gen_server).
--export([start_link/0, init/1, handle_call/3, handle_cast/2]).
+-export([start_link/0, init/1, handle_call/3, handle_cast/2, check_tweet/2]).
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
@@ -16,14 +16,21 @@ handle_cast({tweet, Tweet}, State) ->
 
     Language = proplists:get_value(<<"lang">>, Tweet_Info_Field),
     Text = proplists:get_value(<<"text">>, Tweet_Info_Field),
-    check_language(binary_to_list(Language)),
+
+    check_tweet(binary_to_list(Language), binary_to_list(Text)),
     {noreply, State}.
 
-check_language("en") ->
-    io:format("~nvalid language", []);
+check_tweet("en", Text) ->
+    Separated_Words = re:split(Text, "[ .,?!:-;/'()@]"),
+    Score = [dictionary:check_word(Word) || Word <- Separated_Words],
+    io:format("~nMsg: ~s~n~nScore: ~p~n", [Text, Score]);
 
-check_language(_) ->
-    io:format("~nundefined or invalid language", []).
+check_tweet("{\"message\": panic}", Tweet) ->
+    io:format("panic message received", []),
+    ok;
+
+check_tweet(_, Text) ->
+    io:format("~nundefined or invalid language~n", []).
 
 handle_call(_, _, _) ->
     ok.
