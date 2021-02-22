@@ -23,14 +23,14 @@ handle_cast({tweet, Tweet}, State) ->
 check_tweet("en", Text) ->
     Separated_Words = re:split(Text, "[ .,?!:-;/'()@]"),
     Score = [dictionary:check_word(Word) || Word <- Separated_Words],
-    io:format("~nMsg: ~s~n~nScore: ~p~n", [Text, Score]);
+    io:format("~nMsg: ~s~n~nScore: ~f~n", [Text, lists:sum(Score)/length(Score)]);
 
 check_tweet("{\"message\": panic}", Tweet) ->
     io:format("panic message received", []),
     ok;
 
-check_tweet(_, Text) ->
-    io:format("~nundefined or invalid language~n", []).
+check_tweet(_, Tweet) ->
+    io:format("~nundefined or invalid language~nMsg: ~s~n", [Tweet]).
 
 handle_call(_, _, _) ->
     ok.
