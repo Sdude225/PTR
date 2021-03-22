@@ -6,7 +6,7 @@ start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
 init(Args) ->
-    global:register_name(self(), self()),
+    global:register_name({regular_worker, self()}, self()),
     {ok, Args}.
 
 handle_cast({tweet, Tweet}, State) ->
@@ -29,11 +29,12 @@ check_message_type(Tweet) ->
 
 check_tweet("en", Text) ->
     Separated_Words = re:split(Text, "[ .,?!:-;/'()@]"),
-    Score = [dictionary:check_word(Word) || Word <- Separated_Words],
-    io:format("~nMsg: ~s~n~nScore: ~f~n/////////////////////////////////~n", [Text, lists:sum(Score)/length(Score)]);
+    Score = [dictionary:check_word(Word) || Word <- Separated_Words];
+    % io:format("~nMsg: ~s~n~nScore: ~f~n/////////////////////////////////~n", [Text, lists:sum(Score)/length(Score)]);
 
 check_tweet(_, Text) ->
-    io:format("~nundefined or invalid language~nMsg: ~s~n//////////////////////////////////////~n", [Text]).
+    % io:format("~nundefined or invalid language~nMsg: ~s~n//////////////////////////////////////~n", [Text]).
+    ok.
 
 
 terminate(Reason, State) ->

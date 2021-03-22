@@ -26,10 +26,12 @@ change_workers_number(Num_of_msgs) ->
     Difference = Required_num_workers - proplists:get_value(workers, supervisor:count_children(supervisor)),
     if 
         Difference >= 0 -> 
-            dynamic_supervisor:add_workers(Difference);
+            dynamic_supervisor:add_workers(Difference),
+            er_dynamic_supervisor:add_workers(Difference);
 
         true -> 
-            dynamic_supervisor:kill_workers(-Difference)
+            dynamic_supervisor:kill_workers(-Difference),
+            er_dynamic_supervisor:kill_workers(-Difference)
     end,
     ok.
 
