@@ -18,21 +18,67 @@ handle_cast({tweet, Tweet}, State) ->
 
 
 round_robin_distrib(Tweet, Index) ->
+    Fixed_Tweet = fix_panic_msg(Tweet),
+    Tweets = check_retweet_status(Fixed_Tweet, proplists:get_value(<<"message">>, Fixed_Tweet)),
+
+    % io:format("~n////////////////////////////////////////////~p//////////////////////////////////////~n", [Tweets]),
+
     All_Workers_List = global:registered_names(),
     Regular_Workers_List = [Pid || {regular_worker, Pid} <- All_Workers_List],
     Er_Workers_List = [Pid || {er_worker, Pid} <- All_Workers_List],
     Workers_List_Size = length(Regular_Workers_List),
+
     if 
         Workers_List_Size < Index ->
-            gen_server:cast(lists:nth(Index, Regular_Workers_List), {tweet, Tweet}),
-            gen_server:cast(lists:nth(Index, Er_Workers_List), {tweet, Tweet}),
+            [cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, Tmp) || Tmp <- Tweets],
             Index + 1;
         true ->
-            gen_server:cast(lists:nth(1, Regular_Workers_List), {tweet, Tweet}),
-            gen_server:cast(lists:nth(1, Er_Workers_List), {tweet, Tweet}),
+            [cast_to_workers(1, Regular_Workers_List, Er_Workers_List, Tmp) || Tmp <- Tweets],
             1
     end.
 
+fix_panic_msg(Tweet) ->
+    Is_Not_Panic = is_atom(string:find(Tweet, "panic}", trailing)),
+    if
+        Is_Not_Panic ->
+            handle_corrupt_tweets(Tweet);
+        true ->
+            Fixed_Tweet = string:replace(Tweet, "panic}", "\"panic\"}", all),
+            handle_corrupt_tweets(Fixed_Tweet)
+    end.
+
+handle_corrupt_tweets(Tweet) ->
+    try jsone:decode(list_to_binary([Tweet]), [{object_format, proplist}]) of
+        _ -> 
+            Tmp = jsone:decode(list_to_binary([Tweet]), [{object_format, proplist}]),
+            Tmp
+    catch
+        _:_ -> 
+            []
+    end.
+
+check_retweet_status(Tweet, undefined) ->
+    [];
+
+check_retweet_status(Tweet, <<"panic">>) ->
+    [Tweet];
+
+check_retweet_status(Tweet, Message_Info_Field) ->   
+    [{<<"tweet">>, Tweet_Info_Field}, _] = Message_Info_Field,
+    Is_Not_Retweet = is_atom(proplists:get_value(<<"retweeted_status">>, Tweet_Info_Field)),
+    if 
+        Is_Not_Retweet ->
+            [Tweet];
+
+        true -> 
+            Retweet = proplists:get_value(<<"retweeted_status">>, Tweet_Info_Field),
+            [Tweet, Retweet]
+    end.
+
+
+cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, Tweet) ->
+    % gen_server:cast(lists:nth(Index, Regular_Workers_List), {tweet, Tweet}).
+    gen_server:cast(lists:nth(Index, Er_Workers_List), {tweet, Tweet}).
 
 handle_info(Info, State) ->
     {noreply, State}.

@@ -1,12 +1,17 @@
 -module(test).
--export([init/0, loop/0]).
+-export([print/1, init/0]).
+
 
 init() ->
-    register(conn1, spawn(?MODULE, loop, [])).
+    try Tmp = jsone:decode(<<"">>) of
+        _ -> io:format("pizda")
+        catch
+            _:_ -> 
+        end.
 
-loop() -> 
-    receive
-        S -> 
-            io:format("~n~s~n", [S]),
-            loop()
-    end.
+
+print(<<"hello">>) ->
+    io:format("pizda nahui");
+
+print(X) ->
+    io:format("~p~n", [X*2]).

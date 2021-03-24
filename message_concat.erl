@@ -19,8 +19,8 @@ handle_cast({tweet, Tweet}, State) ->
 
         true ->
             NewState = lists:append(State, [Tweet]),
-            Split_Msg = string:split(NewState, "event: \"message\"\n\ndata:", all),
-            gen_server:cast(router, {tweet, Split_Msg}),
+            Split_Msg = string:split(string:join([NewState], ""), "event: \"message\"\n\ndata:", all),
+            [gen_server:cast(router, {tweet, Tmp}) || Tmp <- Split_Msg, string:is_empty(Tmp) /= true],
             {noreply, []}
     end.
 

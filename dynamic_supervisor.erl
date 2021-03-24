@@ -5,7 +5,7 @@
 
 start_link() ->
     supervisor:start_link({local, supervisor}, ?MODULE, []),
-    add_workers(5).
+    add_workers(2).
 
 init(_Args) ->
     SupervisorSpecification = #{
