@@ -7,7 +7,8 @@ start_link() ->
     gen_server:start_link({local, router}, ?MODULE, [], []),
     dynamic_supervisor:start_link(),
     er_dynamic_supervisor:start_link(),
-    auto_scaler:start_link().
+    auto_scaler:start_link(),
+    aggregator:start_link().
 
 init(Args) ->
     {ok, 1}.
@@ -21,7 +22,9 @@ round_robin_distrib(Tweet, Index) ->
     Fixed_Tweet = fix_panic_msg(Tweet),
     Tweets = check_retweet_status(Fixed_Tweet, proplists:get_value(<<"message">>, Fixed_Tweet)),
 
-    % io:format("~n////////////////////////////////////////////~p//////////////////////////////////////~n", [Tweets]),
+    IDed_Tweets = lists:zip([erlang:unique_integer([positive, monotonic]) || _ <- Tweets], Tweets),
+
+    [gen_server:cast(aggregator, {tweet, ID, _Tweet}) || {ID, _Tweet} <- IDed_Tweets],
 
     All_Workers_List = global:registered_names(),
     Regular_Workers_List = [Pid || {regular_worker, Pid} <- All_Workers_List],
@@ -29,11 +32,11 @@ round_robin_distrib(Tweet, Index) ->
     Workers_List_Size = length(Regular_Workers_List),
 
     if 
-        Workers_List_Size < Index ->
-            [cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, Tmp) || Tmp <- Tweets],
+        Workers_List_Size > Index ->
+            [cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, Tmp) || Tmp <- IDed_Tweets],
             Index + 1;
         true ->
-            [cast_to_workers(1, Regular_Workers_List, Er_Workers_List, Tmp) || Tmp <- Tweets],
+            [cast_to_workers(1, Regular_Workers_List, Er_Workers_List, Tmp) || Tmp <- IDed_Tweets],
             1
     end.
 
@@ -68,17 +71,17 @@ check_retweet_status(Tweet, Message_Info_Field) ->
     Is_Not_Retweet = is_atom(proplists:get_value(<<"retweeted_status">>, Tweet_Info_Field)),
     if 
         Is_Not_Retweet ->
-            [Tweet];
+            [Tweet_Info_Field];
 
         true -> 
             Retweet = proplists:get_value(<<"retweeted_status">>, Tweet_Info_Field),
-            [Tweet, Retweet]
+            [Tweet_Info_Field, Retweet]
     end.
 
 
-cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, Tweet) ->
-    % gen_server:cast(lists:nth(Index, Regular_Workers_List), {tweet, Tweet}).
-    gen_server:cast(lists:nth(Index, Er_Workers_List), {tweet, Tweet}).
+cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, {ID, Tweet}) ->
+    gen_server:cast(lists:nth(Index, Regular_Workers_List), {tweet, ID, Tweet}),
+    gen_server:cast(lists:nth(Index, Er_Workers_List), {tweet, ID, Tweet}).
 
 handle_info(Info, State) ->
     {noreply, State}.

@@ -1,6 +1,6 @@
 -module(worker).
 -behaviour(gen_server).
--export([start_link/0, init/1, handle_call/3, handle_cast/2, check_tweet/2, terminate/2]).
+-export([start_link/0, init/1, handle_call/3, handle_cast/2, check_tweet/3, terminate/2]).
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
@@ -10,37 +10,37 @@ init(Args) ->
     global:register_name({regular_worker, self()}, self()),
     {ok, Args}.
 
-handle_cast({tweet, Tweet}, State) ->
+handle_cast({tweet, ID, Tweet}, State) ->
     timer:sleep(rand:uniform(451) + 49),
 
-    check_message_type(proplists:get_value(<<"message">>, Tweet), Tweet),
-
+    check_message_type(proplists:get_value(<<"message">>, Tweet), Tweet, ID),
+    % io:format("~n~n~nmsg ID: ~p~nworkerid: ~p~n regularworker~n~n~n", [ID, self()]),
 
     {noreply, State}.
 
-check_message_type(<<"panic">>, _) ->
+check_message_type(<<"panic">>, _, _) ->
     exit(self(), kill);
 
-check_message_type(undefined, Tweet) ->
+check_message_type(undefined, Tweet, ID) ->
     Language = proplists:get_value(<<"lang">>, Tweet),
     Text = proplists:get_value(<<"text">>, Tweet),
-    check_tweet(binary_to_list(Language), binary_to_list(Text));
+    check_tweet(binary_to_list(Language), binary_to_list(Text), ID).
 
-check_message_type(_, Tweet) ->
-    [{<<"message">>, [{<<"tweet">>, Tweet_Info_Field}, _]}] = Tweet,
+% check_message_type(_, Tweet, ID) ->
+%     [{<<"message">>, [{<<"tweet">>, Tweet_Info_Field}, _]}] = Tweet,
 
-    Language = proplists:get_value(<<"lang">>, Tweet_Info_Field),
-    Text = proplists:get_value(<<"text">>, Tweet_Info_Field),
-    check_tweet(binary_to_list(Language), binary_to_list(Text)).
+%     Language = proplists:get_value(<<"lang">>, Tweet_Info_Field),
+%     Text = proplists:get_value(<<"text">>, Tweet_Info_Field),
+%     check_tweet(binary_to_list(Language), binary_to_list(Text), ID).
 
-check_tweet("en", Text) ->
+check_tweet("en", Text, ID) ->
     Separated_Words = re:split(Text, "[ .,?!:-;/'()@]"),
     Score = [dictionary:check_word(Word) || Word <- Separated_Words],
-    io:format("~nMsg: ~s~n~nScore: ~f~n/////////////////////////////////~n", [Text, lists:sum(Score)/length(Score)]);
+    % io:format("~n~n~n~f~n~n~n", [lists:sum(Score)/length(Score)]);
+    gen_server:cast(aggregator, {emotion_value, ID, lists:sum(Score)/length(Score)});
 
-check_tweet(_, Text) ->
-    io:format("~nundefined or invalid language~nMsg: ~s~n//////////////////////////////////////~n", [Text]),
-    ok.
+check_tweet(_, Text, ID) ->
+    gen_server:cast(aggregator, {emotion_value, ID, 0}).
 
 
 terminate(Reason, State) ->
