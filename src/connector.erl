@@ -5,6 +5,7 @@
 init() ->
     inets:start(),
     message_concat:start_link(),
+    sink:start_link(),
     register(conn1, spawn(?MODULE, request, ["http://localhost:4001/tweets/1"])),
     register(conn2, spawn(?MODULE, request, ["http://localhost:4001/tweets/2"])).
 

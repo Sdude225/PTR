@@ -1,8 +1,9 @@
-# PTR
-# Pavlov Alexandru, FAF-181
+pr_lab
+=====
 
-cover:compile_directory().
+An OTP application
 
-connector:init().
+Build
+-----
 
-[![Watch the video](https://media.giphy.com/media/lV5q6TCkINUj0XC6SS/giphy.gif)](https://youtu.be/jhMZazYeTJI)
+    $ rebar3 compile

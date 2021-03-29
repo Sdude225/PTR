@@ -9,11 +9,6 @@ init(Args) ->
     ets:new(ets_table, [ordered_set, public, named_table]),
     {ok, Args}.
 
-% ets_info() ->
-%     timer:sleep(2000),
-%     io:format("~n~n~n~p~n~n~n", [ets:info(ets_table)]),
-%     ets_info().
-
 handle_cast({tweet, ID, Tweet}, State) ->
     handle_panic_messages(proplists:get_value(<<"message">>, Tweet), ID, Tweet),
     {noreply, State};
@@ -34,7 +29,7 @@ update_tweet(undefined, Tweet, ID, Value) ->
 
 update_tweet(_, Tweet, ID, Value) ->
     Updated_Tweet = [Tweet, Value],
-    % io:format("~n~n~n~p~n~n~n", [Updated_Tweet]),
+    gen_server:cast(sink, {tweet, Updated_Tweet}),
     ets:delete(ets_table, ID).
 
 handle_panic_messages(undefined, ID, Tweet) ->

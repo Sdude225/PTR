@@ -19,8 +19,10 @@ handle_cast({tweet, Tweet}, State) ->
 
 
 round_robin_distrib(Tweet, Index) ->
+    % io:format("~n~n~nTweet:~n~n~s~n~n~n", [Tweet]),
     Fixed_Tweet = fix_panic_msg(Tweet),
-    Tweets = check_retweet_status(Fixed_Tweet, proplists:get_value(<<"message">>, Fixed_Tweet)),
+    io:format("~n~n~nTweet:~n~n~s~n~n~nFixedTweet:~n~n~p~n~n~n", [Tweet, Fixed_Tweet]),
+    Tweets = check_retweet_status(Fixed_Tweet, proplists:get_value(<<"message">>, Fixed_Tweet, not_found)),
 
     IDed_Tweets = lists:zip([erlang:unique_integer([positive, monotonic]) || _ <- Tweets], Tweets),
 
@@ -60,13 +62,14 @@ handle_corrupt_tweets(Tweet) ->
             []
     end.
 
-check_retweet_status(Tweet, undefined) ->
+check_retweet_status(Tweet, not_found) ->
+    io:format("zdorou~n"),
     [];
 
 check_retweet_status(Tweet, <<"panic">>) ->
     [Tweet];
 
-check_retweet_status(Tweet, Message_Info_Field) ->   
+check_retweet_status(Tweet, Message_Info_Field) -> 
     [{<<"tweet">>, Tweet_Info_Field}, _] = Message_Info_Field,
     Is_Not_Retweet = is_atom(proplists:get_value(<<"retweeted_status">>, Tweet_Info_Field)),
     if 
