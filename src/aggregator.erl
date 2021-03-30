@@ -24,11 +24,11 @@ handle_cast({engagement_ratio, ID, Engagement_Ratio}, State) ->
     {noreply, State}.
 
 update_tweet(undefined, Tweet, ID, Value) ->
-    Updated_Tweet = [Tweet, Value],
+    Updated_Tweet = lists:append(Tweet, [Value]),
     ets:insert(ets_table, {ID, Updated_Tweet});
 
 update_tweet(_, Tweet, ID, Value) ->
-    Updated_Tweet = [Tweet, Value],
+    Updated_Tweet = lists:append(Tweet, [Value]),
     gen_server:cast(sink, {tweet, Updated_Tweet}),
     ets:delete(ets_table, ID).
 

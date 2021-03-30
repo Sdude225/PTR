@@ -21,7 +21,7 @@ handle_cast({tweet, Tweet}, State) ->
 round_robin_distrib(Tweet, Index) ->
     % io:format("~n~n~nTweet:~n~n~s~n~n~n", [Tweet]),
     Fixed_Tweet = fix_panic_msg(Tweet),
-    io:format("~n~n~nTweet:~n~n~s~n~n~nFixedTweet:~n~n~p~n~n~n", [Tweet, Fixed_Tweet]),
+    % io:format("~n~n~nTweet:~n~n~s~n~n~nFixedTweet:~n~n~p~n~n~n", [Tweet, Fixed_Tweet]),
     Tweets = check_retweet_status(Fixed_Tweet, proplists:get_value(<<"message">>, Fixed_Tweet, not_found)),
 
     IDed_Tweets = lists:zip([erlang:unique_integer([positive, monotonic]) || _ <- Tweets], Tweets),
@@ -81,6 +81,9 @@ check_retweet_status(Tweet, Message_Info_Field) ->
             [Tweet_Info_Field, Retweet]
     end.
 
+cast_to_workers(Index, [], [], {ID, Tweet}) ->
+    io:format("smerti"),
+    ok.
 
 cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, {ID, Tweet}) ->
     gen_server:cast(lists:nth(Index, Regular_Workers_List), {tweet, ID, Tweet}),
