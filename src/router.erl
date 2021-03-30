@@ -81,10 +81,6 @@ check_retweet_status(Tweet, Message_Info_Field) ->
             [Tweet_Info_Field, Retweet]
     end.
 
-cast_to_workers(Index, [], [], {ID, Tweet}) ->
-    io:format("smerti"),
-    ok.
-
 cast_to_workers(Index, Regular_Workers_List, Er_Workers_List, {ID, Tweet}) ->
     gen_server:cast(lists:nth(Index, Regular_Workers_List), {tweet, ID, Tweet}),
     gen_server:cast(lists:nth(Index, Er_Workers_List), {tweet, ID, Tweet}).
