@@ -94,10 +94,10 @@ get_users(Tweets, Tmp) ->
     get_users(T, Tmp ++ [{user, User}]).
 
 insert_to_db(Connection, Tweets) ->
-    io:format("~ninserting ~p tweets and users", [length(Tweets)]),
     Users = get_users(Tweets, []),
-    mongo_api:insert(Connection, ?tweets_collection, [Tweets]),
-    mongo_api:insert(Connection, ?users_collection, [Users]),
+    io:format("~ninserting ~p tweets and ~p users", [length(Tweets), length(Users)]),
+    mongo_api:insert(Connection, ?tweets_collection, Tweets),
+    mongo_api:insert(Connection, ?users_collection, Users),
     ok.
     
 

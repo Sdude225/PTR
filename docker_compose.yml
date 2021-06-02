@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  main-source:
+    image: alexburlacu/rtp-server:faf18x
+
+  msgbroker:
+    container_name: msgbroker
+    depends_on:
+      - main-source
+    build:
+      context: ./msgbroker
+      dockerfile: dockerfile.yml
+    volumes:
+      - ./msgbroker/src:/msgbroker/src
+    working_dir: /msgbroker
+    tty: true
+    command: rebar3 shell
+
+  lab1_lab2:
+    container_name: lab1_lab2
+    depends_on:
+      - msgbroker
+    build:
+      context: ./lab1_lab2
+      dockerfile: dockerfile.yml
+    volumes:
+      - ./lab1_lab2/src:/lab1_lab2
+    working_dir: /lab1_lab2
+    tty: true
+    command: rebar3 shell
+
+  client:
+    container_name: client
+    depends_on:
+      - lab1_lab2
+    build:
+      context: ./client
+      dockerfile: dockerfile.yml
+    volumes:
+      - ./client:/client
+    working_dir: /client
+    tty: true
+    command: rebar3 shell

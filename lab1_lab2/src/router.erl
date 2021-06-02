@@ -63,7 +63,6 @@ handle_corrupt_tweets(Tweet) ->
     end.
 
 check_retweet_status(Tweet, not_found) ->
-    io:format("zdorou~n"),
     [];
 
 check_retweet_status(Tweet, <<"panic">>) ->

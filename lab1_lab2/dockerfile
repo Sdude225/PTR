@@ -1,0 +1,7 @@
+FROM erlang:latest
+
+WORKDIR /lab1_lab2
+
+COPY rebar.config ./
+
+RUN rebar3 compile

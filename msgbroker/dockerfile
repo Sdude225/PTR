@@ -1,0 +1,7 @@
+FROM erlang:latest
+
+WORKDIR /msgbroker
+
+COPY rebar.config ./
+
+RUN rebar3 compile
